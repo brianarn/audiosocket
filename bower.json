@@ -1,0 +1,11 @@
+{
+  "name": "audiosocketfront",
+  "version": "0.0.0",
+  "dependencies": {
+    "requirejs": "~2.1.4",
+    "modernizr": "~2.6.2",
+    "jquery": "~1.9.1",
+    "bootstrap": "http://twitter.github.io/bootstrap/assets/bootstrap.zip"
+  },
+  "devDependencies": {}
+}
