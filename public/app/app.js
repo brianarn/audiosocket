@@ -1,9 +1,9 @@
 define([
   'module',
   'jquery',
-  'socket.io',
+  //'socket.io',
   'AudioContext'
-], function (module, $, io, AudioContext) {
+], function (module, $, /*io,*/ AudioContext) {
   // Some convenience variables
   var mid = module.id;
 
@@ -21,16 +21,13 @@ define([
 
     // Set up options
     var defaults = {
-      parentNode: document.body,
+      node: "#audiosocket",
       gain: 0.1
     };
     var options = $.extend({}, defaults, args);
-    if (typeof options.parentNode === 'string') {
-      options.parentNode = document.getElementById(options.parentNode);
-    }
 
     // Create our user interface
-    this.renderUI(options.parentNode);
+    this.connectUI(options.node);
 
     // Create an audio context
     var context = this.context = new AudioContext();
@@ -43,29 +40,54 @@ define([
     gainNode.connect(context.destination);
   };
 
-  // renderUI: Create some DOM nodes, blah blah
-  app.renderUI = function (parentNode) {
-    log('renderUI');
+  // connectUI: Wire up all the events
+  app.connectUI = function (node) {
+    log('connectUI');
 
-    // Top-level DOM node
-    var domNode = this.domNode = document.createElement('div');
-    domNode.className = 'audiosocket';
+    var $node = this.$node = $(node);
 
-    // A couple of child nodes
-    var startNode = this.startNode = document.createElement('button');
-    startNode.setAttribute('type', 'button');
-    startNode.innerHTML = 'Start';
-    startNode.addEventListener('click', this.startOscillator.bind(this), false);
-    domNode.appendChild(startNode);
+    // Bind up the events!
+    var $start = this.$start = $('#start');
+    var $stop = this.$stop = $('#stop');
+    var $waveform = this.$waveform = $('#waveform');
+    var $volume = this.$volume = $('#volume');
+    var $volumeValue = this.$volumeValue = $('#volume-value');
+    var $frequency = this.$frequency = $('#frequency');
+    var $frequencyValue = this.$frequencyValue = $('#frequency-value');
 
-    var stopNode = this.stopNode = document.createElement('button');
-    stopNode.setAttribute('type', 'button');
-    stopNode.innerHTML = 'Stop';
-    stopNode.addEventListener('click', this.stopOscillator.bind(this), false);
-    domNode.appendChild(stopNode);
+    $start.on('click', this.startOscillator.bind(this));
+    $stop.on('click', this.stopOscillator.bind(this));
+    $waveform.on('change', function(event){
+      var value = this.value;
+      var oscillator = app.oscillator;
 
-    // Append it in
-    parentNode.appendChild(domNode);
+      console.log('Changing waveform to %s', value);
+
+      // If we have an oscillator, make adjustments
+      if (oscillator){
+        oscillator.type = oscillator[value];
+      }
+
+    });
+    $volume.on('change', function(event){
+      var value = this.value;
+      console.log('Setting gain value to %s', value);
+      app.gainNode.gain.value = value;
+      $volumeValue.html(value);
+    });
+    $frequency.on('change', function(event){
+      var value = this.value;
+      var oscillator = app.oscillator;
+
+      // Adjust values
+      console.log('Setting frequency to %s', value);
+      $frequencyValue.html(value);
+
+      // If we have an oscillator, make adjustments directly
+      if (oscillator) {
+        oscillator.frequency.value = value;
+      }
+    });
   };
 
   // startOscillator: Create and start an oscillator playing
@@ -77,7 +99,8 @@ define([
 
     // Create an oscillator, hook it up to the gain, and start it
     var oscillator = this.oscillator = this.context.createOscillator();
-    oscillator.type = oscillator.SQUARE;
+    oscillator.type = oscillator[this.$waveform.val()];
+    oscillator.frequency.value = this.$frequency.val();
     oscillator.connect(this.gainNode);
     oscillator.start(0);
   };

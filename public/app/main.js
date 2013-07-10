@@ -7,8 +7,6 @@ require.config({
 });
 
 require(['app', 'domReady!'], function (app) {
-  app.init({
-    parentNode: 'audiosocket'
-  });
+  app.init({});
 });
 // vim: set et ts=2 sts=2 sw=2:
