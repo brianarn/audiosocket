@@ -5,7 +5,8 @@
     "requirejs": "~2.1.4",
     "modernizr": "~2.6.2",
     "jquery": "~1.9.1",
-    "bootstrap": "http://twitter.github.io/bootstrap/assets/bootstrap.zip"
+    "bootstrap": "http://twitter.github.io/bootstrap/assets/bootstrap.zip",
+    "requirejs-domready": "~2.0.1"
   },
   "devDependencies": {}
 }
