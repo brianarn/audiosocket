@@ -1,10 +1,11 @@
 define([
   'module',
   'jquery',
-  //'socket.io',
+  'socket.io',
   'AudioContext'
-], function (module, $, /*io,*/ AudioContext) {
+], function (module, $, io, AudioContext) {
   // Some convenience variables
+  var socket;
   var mid = module.id;
 
   // A simple logger to make debugging a bit easier
@@ -25,6 +26,9 @@ define([
       gain: 0.1
     };
     var options = $.extend({}, defaults, args);
+
+    // Sockets!
+    socket = this.socket = io.connect();
 
     // Create our user interface
     this.connectUI(options.node);
@@ -55,8 +59,19 @@ define([
     var $frequency = this.$frequency = $('#frequency');
     var $frequencyValue = this.$frequencyValue = $('#frequency-value');
 
+    /*
     $start.on('click', this.startOscillator.bind(this));
     $stop.on('click', this.stopOscillator.bind(this));
+    */
+    $start.on('click', function(){
+      socket.emit('start');
+    });
+    socket.on('start', this.startOscillator.bind(this));
+    $stop.on('click', function(){
+      socket.emit('stop');
+    });
+    socket.on('stop', this.stopOscillator.bind(this));
+
     $waveform.on('change', function(event){
       var value = this.value;
       var oscillator = app.oscillator;
@@ -67,8 +82,8 @@ define([
       if (oscillator){
         oscillator.type = oscillator[value];
       }
-
     });
+
     $volume.on('change', function(event){
       var value = this.value;
       console.log('Setting gain value to %s', value);
@@ -93,12 +108,16 @@ define([
   // startOscillator: Create and start an oscillator playing
   app.startOscillator = function (event) {
     log('startOscillator');
+    var oscillator = this.oscillator;
 
     // If we received a DOM event, keep any defaults from happening
     if (event && event.preventDefault) { event.preventDefault(); }
 
+    // Don't allow multiple starts
+    if (oscillator) { return; }
+
     // Create an oscillator, hook it up to the gain, and start it
-    var oscillator = this.oscillator = this.context.createOscillator();
+    oscillator = this.oscillator = this.context.createOscillator();
     oscillator.type = oscillator[this.$waveform.val()];
     oscillator.frequency.value = this.$frequency.val();
     oscillator.connect(this.gainNode);

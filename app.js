@@ -33,10 +33,23 @@ if (app.get('env') === 'development') {
 // Create the server instance
 var server = http.createServer(app);
 
-// Get socket.io going
-var io = require('socket.io').listen(server);
-
 // Start the server up
 server.listen(app.get('port'), function(){
 	console.log('Express server listening on port ' + app.get('port'));
+});
+
+// Get socket.io going
+var io = require('socket.io').listen(server);
+
+io.sockets.on('connection', function(socket){
+	// Simply broadcast start/stop everywhere
+	socket.on('start', function(object){
+		socket.broadcast.emit('start', object);
+		socket.emit('start', object);
+	});
+	socket.on('stop', function(object){
+		socket.broadcast.emit('stop', object);
+		socket.emit('stop', object);
+	});
+	// Send frequency changes
 });
